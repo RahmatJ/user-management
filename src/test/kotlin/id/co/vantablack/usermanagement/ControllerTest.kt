@@ -2,16 +2,19 @@ package id.co.vantablack.usermanagement
 
 import org.junit.jupiter.api.Nested
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
-import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.get
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.web.servlet.client.RestTestClient
+import org.testcontainers.junit.jupiter.Testcontainers
 import kotlin.test.Test
 
-@WebMvcTest(Controller::class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Testcontainers
+@AutoConfigureRestTestClient
 class ControllerTest {
 
     @Autowired
-    lateinit var mockMvc: MockMvc
+    lateinit var client: RestTestClient
 
     @Nested
     inner class GetUser {
@@ -19,11 +22,11 @@ class ControllerTest {
         fun `should return user - given valid email`() {
             val email = "mock@test.com"
 
-            mockMvc.get("/users/$email").andExpect {
-                status { isOk() }
-                jsonPath("$.email") {value(email    )}
-            }
-
+            client.get().uri("/users/$email")
+                .exchange()
+                .expectStatus().isOk
+                .expectBody()
+                .jsonPath("$.email").isEqualTo(email)
         }
     }
 
